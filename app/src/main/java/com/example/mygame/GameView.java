@@ -14,24 +14,22 @@ import android.view.View;
 
 import androidx.annotation.Nullable;
 
+import java.util.ArrayList;
 import java.util.Random;
 import java.util.logging.LogRecord;
 
 public class GameView extends View {
 
     Bitmap background;
-
     Rect rect;
-    int dWidth, dHeight;
-
-    Bitmap[] bird = new Bitmap[14];
-    int birdX, birdY, velocity, birdFrame;
-    int birdWidth;
+    static int dWidth, dHeight;
 
     Handler handler;
     Runnable runnable;
-
     int UPDATE_MILLIS = 30;
+    int NO_OF_BIRDS = 3;
+
+    ArrayList<Bird1> birds;
 
     public GameView(Context context) {
         super(context);
@@ -44,28 +42,6 @@ public class GameView extends View {
         dWidth = rect.width();
         dHeight=  rect.height();
 
-        bird[0] = BitmapFactory.decodeResource(getResources(), R.drawable.frame00);
-        bird[1] = BitmapFactory.decodeResource(getResources(), R.drawable.frame01);
-        bird[2] = BitmapFactory.decodeResource(getResources(), R.drawable.frame02);
-        bird[3] = BitmapFactory.decodeResource(getResources(), R.drawable.frame03);
-        bird[4] = BitmapFactory.decodeResource(getResources(), R.drawable.frame04);
-        bird[5] = BitmapFactory.decodeResource(getResources(), R.drawable.frame05);
-        bird[6] = BitmapFactory.decodeResource(getResources(), R.drawable.frame06);
-        bird[7] = BitmapFactory.decodeResource(getResources(), R.drawable.frame07);
-        bird[8] = BitmapFactory.decodeResource(getResources(), R.drawable.frame08);
-        bird[9] = BitmapFactory.decodeResource(getResources(), R.drawable.frame09);
-        bird[10] = BitmapFactory.decodeResource(getResources(), R.drawable.frame10);
-        bird[11] = BitmapFactory.decodeResource(getResources(), R.drawable.frame11);
-        bird[12] = BitmapFactory.decodeResource(getResources(), R.drawable.frame12);
-        bird[13] = BitmapFactory.decodeResource(getResources(), R.drawable.frame13);
-
-        birdX = dWidth + 300;
-        birdY = dHeight + 100;
-        velocity = 15;
-
-        birdFrame = 0;
-        birdWidth = bird[0].getWidth();
-
         handler = new Handler();
         runnable = new Runnable() {
             @Override
@@ -74,21 +50,26 @@ public class GameView extends View {
             }
         };
 
+        birds = new ArrayList<>();
+        for(int i = 0; i < NO_OF_BIRDS; i++){
+            Bird1 bird = new Bird1(context);
+            birds.add(bird);
+        }
     }
 
-    private void renderBird(Canvas canvas){
-        canvas.drawBitmap(bird[birdFrame], birdX, birdY, null);
-        birdFrame++;
-        if(birdFrame > 13){
-            birdFrame = 0;
-        }
-        birdX -= velocity;
+    private void renderBirds(Canvas canvas){
+        for(int i = 0; i < birds.size(); i++){
+            Bird1 bird = birds.get(i);
+            canvas.drawBitmap(bird.getBitmap(), bird.birdX, bird.birdY, null);
+            bird.birdFrame++;
+            if(bird.birdFrame > 13){
+                bird.birdFrame = 0;
+            }
 
-        Random random = new Random();
-        if(birdX <= (-1 * birdWidth)){
-            birdX = dWidth + random.nextInt(500);
-            birdY = random.nextInt(300);
-            velocity = 14 + random.nextInt(10);
+            bird.birdX -= bird.velocity;
+            if(bird.birdX <= (-1 * bird.getWidth())){
+                bird.resetPosition();
+            }
         }
     }
 
@@ -97,7 +78,7 @@ public class GameView extends View {
         super.onDraw(canvas);
         canvas.drawBitmap(background, null, rect, null);
 
-        renderBird(canvas);
+        renderBirds(canvas);
 
         handler.postDelayed(runnable, UPDATE_MILLIS);
     }
