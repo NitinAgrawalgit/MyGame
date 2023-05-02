@@ -32,7 +32,7 @@ public class Bird1 {
 
         random = new Random();
 
-        birdX = GameView.dWidth + random.nextInt(1200);
+        birdX = GameView.dWidth + 2000;
         birdY = random.nextInt(300);
         velocity = 10 + random.nextInt(10);
 
