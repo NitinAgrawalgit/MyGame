@@ -14,6 +14,7 @@
         <activity
             android:name=".GameOver"
             android:exported="false"
+            android:parentActivityName=".MainActivity"
             android:theme="@style/Theme.AppCompat.DayNight.NoActionBar" />
         <activity
             android:name=".StartGame"

@@ -28,7 +28,7 @@ public class GameView extends View {
 
     Handler handler;
     Runnable runnable;
-    int UPDATE_MILLIS = 30;
+    int UPDATE_MILLIS = 15;
     int NO_OF_BIRDS = 2;
     ArrayList<Bird1> birds;
 
@@ -44,9 +44,11 @@ public class GameView extends View {
 
     boolean gameState;
 
+    int TOTAL_LIVES = 3;
+
     public GameView(Context context) {
         super(context);
-        background = BitmapFactory.decodeResource(getResources(), R.drawable.background);
+        background = BitmapFactory.decodeResource(getResources(), R.drawable.background6);
 
         target = BitmapFactory.decodeResource(getResources(), R.drawable.catapult);
         stone = BitmapFactory.decodeResource(getResources(), R.drawable.stone_new2);
@@ -79,7 +81,7 @@ public class GameView extends View {
         dX = dY = 0;
         tempX = tempY = 0;
 
-        life = 10;
+        life = TOTAL_LIVES;
         score = 0;
 
         this.context = context;
@@ -97,15 +99,14 @@ public class GameView extends View {
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
         canvas.drawBitmap(background, null, rect, null);
-        canvas.drawLine(0, dHeight * .80f, dWidth, dHeight * .80f, dividerPaint);
+        canvas.drawBitmap(target, dWidth/2 - (target.getWidth()/2), (dHeight*.80f) - (target.getHeight()/2), null);
+
+        //canvas.drawLine(0, dHeight * .80f, dWidth, dHeight * .80f, dividerPaint);
 
         if(life <= 0){
-            gameState = false;
-            Intent intent = new Intent(context, GameOver.class);
-            intent.putExtra("score", score);
-            context.startActivity(intent);
-            ((Activity) context).finish();
+            gameOver();
         }
+        drawlives(canvas);
 
         renderBirds(canvas);
 
@@ -121,8 +122,12 @@ public class GameView extends View {
         switch(event.getAction()){
             case MotionEvent.ACTION_DOWN:
                 dX = dY = fX = fY = tempX = tempY = 0;
+                sX = dWidth / 2;
+                sY = dHeight * .80f;
+                /**
                 sX = event.getX();
                 sY = event.getY();
+                 */
                 break;
             case MotionEvent.ACTION_MOVE:
                 fX = event.getX();
@@ -146,16 +151,26 @@ public class GameView extends View {
     private void renderBirds(Canvas canvas){
         for(int i = 0; i < birds.size(); i++){
             Bird1 bird = birds.get(i);
-            canvas.drawBitmap(bird.getBitmap(), bird.birdX, bird.birdY, null);
-            bird.birdFrame++;
-            if(bird.birdFrame > 13){
-                bird.birdFrame = 0;
-            }
 
-            bird.birdX -= bird.velocity;
-            if(bird.birdX <= (-1 * bird.getWidth())){
-                decrementLife();
-                bird.resetPosition();
+            if(bird.isAlive()){
+                canvas.drawBitmap(bird.getBitmap(), bird.birdX, bird.birdY, null);
+                bird.birdFrame++;
+                if(bird.birdFrame > 13){
+                    bird.birdFrame = 0;
+                }
+
+                bird.birdX -= bird.velocity;
+                if(bird.birdX <= (-1 * bird.getWidth())){
+                    decrementLife();
+                    bird.resetPosition();
+                }
+            }else {
+                canvas.drawBitmap(bird.getBloodBitmap(), bird.birdX, bird.birdY, null);
+                bird.bloodFrame++;
+                if(bird.bloodFrame > 9){
+                    bird.bloodFrame = 0;
+                    bird.resetPosition();
+                }
             }
 
             detectCollision(bird);
@@ -168,7 +183,7 @@ public class GameView extends View {
         && (stoneY <= bird.birdY + bird.getHeight())
         && (stoneY >= bird.birdY)) {
             incrementScore();
-            bird.resetPosition();
+            bird.startBirdKilling();
 
             dX = dY = fX = fY = tempX = tempY = 0;
             stoneX = stoneY = 0;
@@ -200,7 +215,7 @@ public class GameView extends View {
         paint.setARGB(255, 100, 10, 10);
         paint.setStrokeWidth(8);
         paint.setStyle(Paint.Style.STROKE);
-        paint.setPathEffect(new DashPathEffect(new float[]{5, 10, 15, 20}, 0));
+        //paint.setPathEffect(new DashPathEffect(new float[]{5, 10, 15, 20}, 0));
 
         dividerPaint = new Paint();
         dividerPaint.setStrokeWidth(4);
@@ -219,5 +234,23 @@ public class GameView extends View {
             bird_hit.start();
         }
         score++;
+    }
+
+    private  void gameOver(){
+        gameState = false;
+        Intent intent = new Intent(context, GameOver.class);
+        intent.putExtra("score", score);
+        context.startActivity(intent);
+        ((Activity) context).finish();
+    }
+
+    private void drawlives(Canvas canvas){
+        Bitmap heart = BitmapFactory.decodeResource(context.getResources(), R.drawable.heart_icon);
+        int heartX = dWidth-120, heartY = dHeight-120;
+
+        for(int i = 0; i < life; i++){
+            canvas.drawBitmap(heart, heartX, heartY, null);
+            heartX -= 100;
+        }
     }
 }

@@ -10,9 +10,14 @@ public class Bird1 {
 
     Bitmap[] bird = new Bitmap[14];
 
+    Bitmap[] blood = new Bitmap[10];
+
     int birdX, birdY, velocity, birdFrame;
+    int bloodFrame;
 
     Random random;
+
+    boolean alive;
 
     public Bird1(Context context){
         bird[0] = BitmapFactory.decodeResource(context.getResources(), R.drawable.frame00);
@@ -30,6 +35,17 @@ public class Bird1 {
         bird[12] = BitmapFactory.decodeResource(context.getResources(), R.drawable.frame12);
         bird[13] = BitmapFactory.decodeResource(context.getResources(), R.drawable.frame13);
 
+        blood[0] = BitmapFactory.decodeResource(context.getResources(), R.drawable.blood00);
+        blood[1] = BitmapFactory.decodeResource(context.getResources(), R.drawable.blood01);
+        blood[2] = BitmapFactory.decodeResource(context.getResources(), R.drawable.blood02);
+        blood[3] = BitmapFactory.decodeResource(context.getResources(), R.drawable.blood03);
+        blood[4] = BitmapFactory.decodeResource(context.getResources(), R.drawable.blood04);
+        blood[5] = BitmapFactory.decodeResource(context.getResources(), R.drawable.blood05);
+        blood[6] = BitmapFactory.decodeResource(context.getResources(), R.drawable.blood06);
+        blood[7] = BitmapFactory.decodeResource(context.getResources(), R.drawable.blood07);
+        blood[8] = BitmapFactory.decodeResource(context.getResources(), R.drawable.blood08);
+        blood[9] = BitmapFactory.decodeResource(context.getResources(), R.drawable.blood09);
+
         random = new Random();
 
         birdX = GameView.dWidth + 2000;
@@ -37,6 +53,9 @@ public class Bird1 {
         velocity = 10 + random.nextInt(10);
 
         birdFrame = 0;
+        bloodFrame = 0;
+
+        alive = true;
     }
 
     public Bitmap getBitmap(){
@@ -52,8 +71,22 @@ public class Bird1 {
     }
 
     public void resetPosition(){
+        alive = true;
+
         birdX = GameView.dWidth + random.nextInt(1200);
         birdY = random.nextInt(300);
         velocity = 10 + random.nextInt(10);
+    }
+
+    public void startBirdKilling() {
+        alive = false;
+    }
+
+    public boolean isAlive(){
+        return alive;
+    }
+
+    public Bitmap getBloodBitmap() {
+        return blood[bloodFrame];
     }
 }
