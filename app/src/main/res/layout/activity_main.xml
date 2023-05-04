@@ -10,12 +10,49 @@
     android:orientation="vertical"
     android:background="@drawable/background_blurred" >
 
+    <!--
+    <RelativeLayout
+        android:layout_width="400dp"
+        android:layout_height="250dp" >
+
+        <ImageView
+            android:src="@drawable/slingshot_clipart3"
+            android:layout_width="200dp"
+            android:layout_height="100dp"
+            android:layout_alignParentEnd="true"/>
+
+        <ImageView
+            android:src="@drawable/sling_shot_3a"
+            android:layout_width="wrap_content"
+            android:layout_height="120dp"
+            android:layout_gravity="start"
+            android:paddingStart="10dp"
+            android:layout_marginTop="30dp"/>
+
+        <ImageView
+            android:src="@drawable/sling_shot_3b"
+            android:layout_width="wrap_content"
+            android:layout_height="100dp"
+            android:layout_gravity="end"
+            android:paddingEnd="10dp"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentBottom="true"/>
+    </RelativeLayout>
+    -->
+
+    <ImageView
+        android:src="@drawable/sling_shot_13"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="10dp" />
+
     <ImageView
         android:id="@+id/play_button"
         android:src="@drawable/wooden_play"
         android:layout_width="200dp"
         android:layout_height="200dp"
-        android:layout_marginBottom="40dp" />
+        android:layout_marginTop="50dp"
+        android:layout_marginBottom="10dp" />
 
     <ImageView
         android:id="@+id/exit_button"

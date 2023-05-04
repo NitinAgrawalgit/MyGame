@@ -154,7 +154,7 @@ public class GameView extends View {
                 stoneY = fY;
                 dX = fX - sX;
                 dY = fY - sY;
-                if(shoot != null){
+                if(shoot != null && fY >= dHeight*.80f){
                     shoot.start();
                 }
                 break;
@@ -292,7 +292,7 @@ public class GameView extends View {
         float pressX = event.getX();
         float pressY = event.getY();
 
-        if(pressX <= pauseX && pressY <= pauseY){
+        if(pressX <= pauseX + 150 && pressY <= pauseY + 150){
             if(isPaused){
                 isPaused = false;
             }else {

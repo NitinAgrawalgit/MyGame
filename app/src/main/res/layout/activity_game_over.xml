@@ -10,6 +10,7 @@
     android:gravity="center"
     android:background="@drawable/background_blurred" >
 
+    <!--
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -18,6 +19,13 @@
         android:fontFamily="casual"
         android:textStyle="italic"
         android:textColor="#AF5220" />
+       -->
+
+    <ImageView
+        android:src="@drawable/game_over_clipart3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="12dp" />
 
     <TextView
         android:id="@+id/score_tv"
