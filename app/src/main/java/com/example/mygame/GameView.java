@@ -9,19 +9,25 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.DashPathEffect;
 import android.graphics.Paint;
+import android.graphics.Point;
 import android.graphics.Rect;
 import android.media.MediaPlayer;
 import android.os.Handler;
+import android.util.Log;
 import android.view.Display;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.constraintlayout.widget.ConstraintSet;
 
 import java.util.ArrayList;
 
 public class GameView extends View {
 
     Bitmap background, target, stone;
+    Bitmap pauseBtn, playBtn;
     Rect rect;
     Paint paint, dividerPaint;
     static int dWidth, dHeight;
@@ -40,27 +46,29 @@ public class GameView extends View {
     float dX, dY; /** displacement of Stone */
     float tempX, tempY; /** Change in the value of X and Y for Stone*/
 
+    float pauseX, pauseY; /** X, Y coordinates of the pause and play button */
+
     int life, score;
 
-    boolean gameState;
+    boolean gameState, isPaused;
 
-    int TOTAL_LIVES = 3;
+    int TOTAL_LIVES = 5;
 
     public GameView(Context context) {
         super(context);
         background = BitmapFactory.decodeResource(getResources(), R.drawable.background6);
 
+        this.context = context;
+
         target = BitmapFactory.decodeResource(getResources(), R.drawable.catapult);
         stone = BitmapFactory.decodeResource(getResources(), R.drawable.stone_new2);
 
+        pauseBtn = BitmapFactory.decodeResource(getResources(), R.drawable.pause_wooden);
+        playBtn = BitmapFactory.decodeResource(getResources(), R.drawable.play_wooden);
+
         paintInit();
 
-        Display display = ((Activity) getContext()).getWindowManager().getDefaultDisplay();
-        rect = new Rect();
-        display.getRectSize(rect);
-
-        dWidth = rect.width();
-        dHeight=  rect.height();
+        createBackground();
 
         handler = new Handler();
         runnable = new Runnable() {
@@ -84,14 +92,18 @@ public class GameView extends View {
         life = TOTAL_LIVES;
         score = 0;
 
-        this.context = context;
-
-        bird_hit = MediaPlayer.create(context, R.raw.hit_sound);
-        bird_miss = MediaPlayer.create(context, R.raw.bird_chirping);
-        shoot = MediaPlayer.create(context, R.raw.shoot_sound);
+        bird_hit = MediaPlayer.create(context, R.raw.hit_sound_short);
+        bird_miss = MediaPlayer.create(context, R.raw.bird_chirping_short);
+        shoot = MediaPlayer.create(context, R.raw.shoot_sound_short);
         shoot.setVolume(1, 1);
 
         gameState = true;
+        isPaused = false;
+
+        //pauseX = dWidth - 160;
+        //pauseY = dHeight - 180;
+        pauseX = 30;
+        pauseY = 30;
     }
 
 
@@ -99,9 +111,8 @@ public class GameView extends View {
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
         canvas.drawBitmap(background, null, rect, null);
+        canvas.drawRect(0, dHeight, dWidth, dHeight+20, dividerPaint);
         canvas.drawBitmap(target, dWidth/2 - (target.getWidth()/2), (dHeight*.80f) - (target.getHeight()/2), null);
-
-        //canvas.drawLine(0, dHeight * .80f, dWidth, dHeight * .80f, dividerPaint);
 
         if(life <= 0){
             gameOver();
@@ -109,6 +120,12 @@ public class GameView extends View {
         drawlives(canvas);
 
         renderBirds(canvas);
+
+        if(isPaused){
+            canvas.drawBitmap(playBtn, pauseX, pauseY, null);
+        }else {
+            canvas.drawBitmap(pauseBtn, pauseX, pauseY, null);
+        }
 
         slingShot(canvas);
 
@@ -118,22 +135,19 @@ public class GameView extends View {
     }
 
     @Override
-    public boolean onTouchEvent(MotionEvent event) {
+    public boolean onTouchEvent(@NonNull MotionEvent event) {
         switch(event.getAction()){
             case MotionEvent.ACTION_DOWN:
                 dX = dY = fX = fY = tempX = tempY = 0;
                 sX = dWidth / 2;
                 sY = dHeight * .80f;
-                /**
-                sX = event.getX();
-                sY = event.getY();
-                 */
                 break;
             case MotionEvent.ACTION_MOVE:
                 fX = event.getX();
                 fY = event.getY();
                 break;
             case MotionEvent.ACTION_UP:
+                checkPausePlay(event);
                 fX = event.getX();
                 fY = event.getY();
                 stoneX = fX;
@@ -154,6 +168,10 @@ public class GameView extends View {
 
             if(bird.isAlive()){
                 canvas.drawBitmap(bird.getBitmap(), bird.birdX, bird.birdY, null);
+                if(isPaused){
+                    continue;
+                }
+
                 bird.birdFrame++;
                 if(bird.birdFrame > 13){
                     bird.birdFrame = 0;
@@ -166,6 +184,9 @@ public class GameView extends View {
                 }
             }else {
                 canvas.drawBitmap(bird.getBloodBitmap(), bird.birdX, bird.birdY, null);
+                if(isPaused){
+                    continue;
+                }
                 bird.bloodFrame++;
                 if(bird.bloodFrame > 9){
                     bird.bloodFrame = 0;
@@ -191,9 +212,10 @@ public class GameView extends View {
     }
 
     private void slingShot(Canvas canvas){
-        if(sX > 0 && sY > (dHeight * .75f)){
-            canvas.drawBitmap(target, sX - (target.getWidth()/2), sY - (target.getHeight()/2), null);
+        if(isPaused ||(fX <= pauseX && fY <= pauseY)){
+            return;
         }
+
         if((Math.abs(fX - sX) > 0 || Math.abs(fY - sY) > 0) && (sY > dHeight * .75 && fY > dHeight * .75)){
             if(tempX == 0 && tempY == 0){ /** To remove stone once user releases finger */
                 canvas.drawBitmap(stone, fX - (stone.getWidth()/2), fY - (stone.getWidth()/2), null);
@@ -213,13 +235,14 @@ public class GameView extends View {
     private void paintInit(){
         paint = new Paint();
         paint.setARGB(255, 100, 10, 10);
-        paint.setStrokeWidth(8);
+        paint.setStrokeWidth(15);
         paint.setStyle(Paint.Style.STROKE);
         //paint.setPathEffect(new DashPathEffect(new float[]{5, 10, 15, 20}, 0));
 
         dividerPaint = new Paint();
-        dividerPaint.setStrokeWidth(4);
+        dividerPaint.setStrokeWidth(10);
         dividerPaint.setARGB(255, 10, 100, 10);
+        dividerPaint.setStyle(Paint.Style.FILL_AND_STROKE);
     }
 
     private void decrementLife(){
@@ -246,11 +269,35 @@ public class GameView extends View {
 
     private void drawlives(Canvas canvas){
         Bitmap heart = BitmapFactory.decodeResource(context.getResources(), R.drawable.heart_icon);
-        int heartX = dWidth-120, heartY = dHeight-120;
+        int heartX = 30, heartY = dHeight - 170;
 
         for(int i = 0; i < life; i++){
             canvas.drawBitmap(heart, heartX, heartY, null);
-            heartX -= 100;
+            heartY -= 120;
+        }
+    }
+
+    private void createBackground(){
+        Display display = ((Activity) context).getWindowManager().getDefaultDisplay();
+
+        Point point = new Point();
+        display.getSize(point);
+        dWidth = point.x;
+        dHeight=  point.y;
+
+        rect = new Rect(0, 0, dWidth, dHeight);
+    }
+
+    private void checkPausePlay(MotionEvent event){
+        float pressX = event.getX();
+        float pressY = event.getY();
+
+        if(pressX <= pauseX && pressY <= pauseY){
+            if(isPaused){
+                isPaused = false;
+            }else {
+                isPaused = true;
+            }
         }
     }
 }
