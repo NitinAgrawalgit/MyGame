@@ -27,7 +27,7 @@ import java.util.ArrayList;
 public class GameView extends View {
 
     Bitmap background, target, stone;
-    Bitmap pauseBtn, playBtn;
+    Bitmap pauseBtn, playBtn, muteBtn, unmuteBtn;
     Rect rect;
     Paint paint, dividerPaint;
     static int dWidth, dHeight;
@@ -47,10 +47,11 @@ public class GameView extends View {
     float tempX, tempY; /** Change in the value of X and Y for Stone*/
 
     float pauseX, pauseY; /** X, Y coordinates of the pause and play button */
+    float muteX, muteY; /** X, Y coordinates of the pause and play button */
 
     int life, score;
 
-    boolean gameState, isPaused;
+    boolean gameState, isPaused, isMuted;
 
     int TOTAL_LIVES = 5;
 
@@ -65,6 +66,9 @@ public class GameView extends View {
 
         pauseBtn = BitmapFactory.decodeResource(getResources(), R.drawable.pause_wooden);
         playBtn = BitmapFactory.decodeResource(getResources(), R.drawable.play_wooden);
+
+        muteBtn = BitmapFactory.decodeResource(getResources(), R.drawable.mute_button);
+        unmuteBtn = BitmapFactory.decodeResource(getResources(), R.drawable.unmute_button);
 
         paintInit();
 
@@ -99,11 +103,15 @@ public class GameView extends View {
 
         gameState = true;
         isPaused = false;
+        isMuted = false;
 
         //pauseX = dWidth - 160;
         //pauseY = dHeight - 180;
         pauseX = 30;
         pauseY = 30;
+
+        muteX = dWidth - 220;
+        muteY = dHeight - 210;
     }
 
 
@@ -118,6 +126,12 @@ public class GameView extends View {
             gameOver();
         }
         drawlives(canvas);
+
+        if(isMuted){
+            canvas.drawBitmap(muteBtn, muteX, muteY, null);
+        }else {
+            canvas.drawBitmap(unmuteBtn, muteX, muteY, null);
+        }
 
         renderBirds(canvas);
 
@@ -148,13 +162,14 @@ public class GameView extends View {
                 break;
             case MotionEvent.ACTION_UP:
                 checkPausePlay(event);
+                checkMuteUnmute(event);
                 fX = event.getX();
                 fY = event.getY();
                 stoneX = fX;
                 stoneY = fY;
                 dX = fX - sX;
                 dY = fY - sY;
-                if(shoot != null && fY >= dHeight*.80f){
+                if((isMuted == false) && (fY >= dHeight*.75f) && fX <= muteX){
                     shoot.start();
                 }
                 break;
@@ -212,7 +227,7 @@ public class GameView extends View {
     }
 
     private void slingShot(Canvas canvas){
-        if(isPaused ||(fX <= pauseX && fY <= pauseY)){
+        if(isPaused || (fX >= muteX && fY >= muteY)){
             return;
         }
 
@@ -235,7 +250,7 @@ public class GameView extends View {
     private void paintInit(){
         paint = new Paint();
         paint.setARGB(255, 100, 10, 10);
-        paint.setStrokeWidth(15);
+        paint.setStrokeWidth(8);
         paint.setStyle(Paint.Style.STROKE);
         //paint.setPathEffect(new DashPathEffect(new float[]{5, 10, 15, 20}, 0));
 
@@ -246,14 +261,14 @@ public class GameView extends View {
     }
 
     private void decrementLife(){
-        if(bird_miss != null){
+        if(isMuted == false){
             bird_miss.start();
         }
         life--;
     }
 
     private void incrementScore() {
-        if (bird_hit != null) {
+        if (isMuted == false) {
             bird_hit.start();
         }
         score++;
@@ -268,12 +283,12 @@ public class GameView extends View {
     }
 
     private void drawlives(Canvas canvas){
-        Bitmap heart = BitmapFactory.decodeResource(context.getResources(), R.drawable.heart_icon);
-        int heartX = 30, heartY = dHeight - 170;
+        Bitmap heart = BitmapFactory.decodeResource(context.getResources(), R.drawable.heart2_small);
+        int heartX = 40, heartY = dHeight - 170;
 
         for(int i = 0; i < life; i++){
             canvas.drawBitmap(heart, heartX, heartY, null);
-            heartY -= 120;
+            heartY -= 130;
         }
     }
 
@@ -297,6 +312,21 @@ public class GameView extends View {
                 isPaused = false;
             }else {
                 isPaused = true;
+            }
+        }
+    }
+
+    private void checkMuteUnmute(MotionEvent event){
+        float pressX = event.getX();
+        float pressY = event.getY();
+
+        if(pressX >= muteX && pressY >= muteY){
+            if(isMuted){
+                isMuted = false;
+                StartGame.bgMusic.start();
+            }else{
+                isMuted = true;
+                StartGame.bgMusic.pause();
             }
         }
     }

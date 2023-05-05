@@ -10,7 +10,7 @@ public class StartGame extends AppCompatActivity {
 
     GameView gameView;
 
-    MediaPlayer bgMusic;
+    static MediaPlayer bgMusic;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
